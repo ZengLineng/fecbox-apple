@@ -1,4 +1,10 @@
-# sing-box-for-apple
+# FECBox for macOS
+
+This fork retains the upstream SFM interface and adds `FECBOX_LOCAL` builds backed by native macOS utun rather than an Apple Network Extension. The local app uses ad-hoc signing, a private application data directory and an owner-only Unix socket. TUN configurations request local administrator authorization when started; the backend exits with the GUI.
+
+Build the complete app and DMG from [ZengLineng/sing-box-fec](https://github.com/ZengLineng/sing-box-fec), which pins this submodule and bundles the matching `fecbox-local` engine. See [the local macOS build instructions](https://github.com/ZengLineng/sing-box-fec/blob/main/docs/fec/MACOS.md). There is no iOS application release in this fork, and it is not an official SagerNet distribution.
+
+## Upstream
 
 Experimental iOS/macOS/tvOS client for sing-box, the universal proxy platform.
 

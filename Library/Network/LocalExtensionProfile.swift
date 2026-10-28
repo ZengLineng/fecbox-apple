@@ -74,9 +74,18 @@ public final class ExtensionProfile: ObservableObject {
         let token = UUID()
         operation = token
         lastError = nil
+        process = nil
         status = .connecting
         do {
             let needsAdmin = try await prepareConfiguration()
+            guard operation == token else {
+                try? FileManager.default.removeItem(at: Self.configURL)
+                return
+            }
+            if (try? await Self.startedAt()) != nil {
+                try await Self.closeBackend()
+                try await Self.waitForShutdown()
+            }
             guard let backend = Bundle.main.url(forAuxiliaryExecutable: "fecbox-local") else {
                 throw Self.failure("Bundled FECBox backend is missing")
             }
@@ -108,6 +117,10 @@ public final class ExtensionProfile: ObservableObject {
             }
             let deadline = Date().addingTimeInterval(30)
             while Date() < deadline {
+                guard operation == token else {
+                    try? FileManager.default.removeItem(at: Self.configURL)
+                    return
+                }
                 do {
                     let started = try await Self.startedAt()
                     guard operation == token else {
@@ -127,7 +140,7 @@ public final class ExtensionProfile: ObservableObject {
         } catch {
             operation = nil
             try? FileManager.default.removeItem(at: Self.configURL)
-            process?.terminate()
+            if process?.isRunning == true { process?.terminate() }
             process = nil
             lastError = error
             status = .disconnected
@@ -141,10 +154,7 @@ public final class ExtensionProfile: ObservableObject {
         status = .disconnecting
         do {
             try await Self.closeBackend()
-            for _ in 0..<80 {
-                if !FileManager.default.fileExists(atPath: FilePath.sharedDirectory.appendingPathComponent("command.sock").path) { break }
-                try await Task.sleep(for: .milliseconds(100))
-            }
+            try await Self.waitForShutdown()
             process = nil
             connectedDate = nil
             status = .disconnected
@@ -153,9 +163,9 @@ public final class ExtensionProfile: ObservableObject {
             if process?.isRunning == true {
                 process?.terminate()
             }
+            try await Self.waitForShutdown()
             status = .disconnected
             connectedDate = nil
-            throw error
         }
     }
 
@@ -203,9 +213,25 @@ public final class ExtensionProfile: ObservableObject {
         "'" + value.replacingOccurrences(of: "'", with: "'\\''") + "'"
     }
 
+    private static func waitForShutdown() async throws {
+        let socket = FilePath.sharedDirectory.appendingPathComponent("command.sock").path
+        for _ in 0..<80 {
+            if !FileManager.default.fileExists(atPath: socket) { return }
+            try await Task.sleep(for: .milliseconds(100))
+        }
+        throw failure("The local backend has not finished stopping")
+    }
+
     private static func backendError() -> NSError {
-        let data = (try? Data(contentsOf: logURL)) ?? Data()
-        let text = String(decoding: data.suffix(16 * 1024), as: UTF8.self)
+        var data = Data()
+        if let file = try? FileHandle(forReadingFrom: logURL) {
+            defer { try? file.close() }
+            if let size = try? file.seekToEnd() {
+                try? file.seek(toOffset: size > 16 * 1024 ? size - 16 * 1024 : 0)
+                data = (try? file.read(upToCount: 16 * 1024)) ?? Data()
+            }
+        }
+        let text = String(decoding: data, as: UTF8.self)
         return failure(text.isEmpty ? "Local backend did not start; check administrator authorization and the configuration" : text)
     }
 
