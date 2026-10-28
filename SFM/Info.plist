@@ -31,10 +31,10 @@
 			<key>CFBundleURLIconFile</key>
 			<string>AppIcon</string>
 			<key>CFBundleURLName</key>
-			<string>sing-box</string>
+			<string>FECBox</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>sing-box</string>
+				<string>fecbox</string>
 			</array>
 		</dict>
 	</array>
@@ -47,7 +47,7 @@
 			<key>NSUbiquitousContainerIsDocumentScopePublic</key>
 			<true/>
 			<key>NSUbiquitousContainerName</key>
-			<string>sing-box</string>
+			<string>FECBox</string>
 			<key>NSUbiquitousContainerSupportedFolderLevels</key>
 			<string>Any</string>
 		</dict>

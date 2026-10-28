@@ -43,7 +43,7 @@ public struct MacApplication: Scene {
     }
 
     public var body: some Scene {
-        Window("sing-box", id: "main", content: {
+        Window(Variant.applicationName, id: "main", content: {
             MainView()
                 .onAppear {
                     Task {

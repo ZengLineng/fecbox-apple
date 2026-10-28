@@ -106,4 +106,15 @@ open class ApplicationDelegate: NSObject, NSApplicationDelegate, UNUserNotificat
         }
         return true
     }
+
+    #if FECBOX_LOCAL
+        public func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+            guard ExtensionProfile.local.status.isConnected else { return .terminateNow }
+            Task {
+                try? await ExtensionProfile.local.stop()
+                sender.reply(toApplicationShouldTerminate: true)
+            }
+            return .terminateLater
+        }
+    #endif
 }

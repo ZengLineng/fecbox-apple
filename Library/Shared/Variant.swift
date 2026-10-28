@@ -10,6 +10,8 @@ public enum Variant {
 
     #if os(iOS)
         public static let applicationName = "SFI"
+    #elseif FECBOX_LOCAL && os(macOS)
+        public static let applicationName = "FECBox"
     #elseif os(macOS)
         public static let applicationName = "SFM"
     #elseif os(tvOS)

@@ -171,11 +171,13 @@ public struct SettingView: View {
             Section {
                 Tabs.app.navigationLink
                 Tabs.core.navigationLink
-                #if !os(tvOS)
+                #if !os(tvOS) && !FECBOX_LOCAL
                     Tabs.packetTunnel.navigationLink
                 #endif
+                #if !FECBOX_LOCAL
                 Tabs.onDemandRules.navigationLink
                 Tabs.profileOverride.navigationLink
+                #endif
                 #if !os(tvOS)
                     remoteControlLink
                 #endif

@@ -6,6 +6,7 @@ import os
     import FileProvider
 #endif
 
+#if !FECBOX_LOCAL
 private let logger = Logger(category: "ExtensionProfile")
 
 @MainActor
@@ -348,3 +349,4 @@ public class ExtensionProfile: ObservableObject {
         try await manager.saveToPreferences()
     }
 }
+#endif
