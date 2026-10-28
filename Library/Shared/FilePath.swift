@@ -5,8 +5,17 @@ public enum FilePath {
     public static let groupName = AppConfiguration.appGroupID
 
     #if FECBOX_LOCAL && os(macOS)
-        private static let defaultSharedDirectory: URL! = ProcessInfo.processInfo.environment["FECBOX_DATA_DIR"].map { URL(fileURLWithPath: $0, isDirectory: true) }
-            ?? FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].appendingPathComponent("FECBox", isDirectory: true)
+        private static let defaultSharedDirectory: URL! = {
+            let directory = ProcessInfo.processInfo.environment["FECBOX_DATA_DIR"].map { URL(fileURLWithPath: $0, isDirectory: true) }
+                ?? FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].appendingPathComponent("FECBox", isDirectory: true)
+            do {
+                try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
+                try FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: directory.path)
+            } catch {
+                fatalError("Cannot prepare private FECBox data directory: \(error.localizedDescription)")
+            }
+            return directory
+        }()
     #else
         private static let defaultSharedDirectory: URL! = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: groupName)
     #endif
